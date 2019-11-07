@@ -1,0 +1,38 @@
+effective stl 42条
+42.确保less<T>与operator<具有相同的语义
+	Widget包含一个重量值和最大速度值
+	class Widget {
+	public:
+		size_t weight() const;
+		size_t maxSpeed() consts;
+};
+按重量对其排序
+bool operator<(const Widget& lhs, const Widget& ths)
+{
+	return lhs.weight() < rhs.weight();
+}
+特殊情况下，创建一个按最大速度排序的multiset<Widget>容器
+multiset<Widget>的默认比较函数是less<Widget>, less<Widge>默认调用operator <
+	所以为了让multiset<Widget>按最大速度排序，特殊化less<Widget>  切断less和operator < 的关系
+	temlate<>
+	struct std::less<Widget> :
+	public
+	std::binary_function<Widget, Widget, bool> {
+	bool operator()(const Widget& lhs, const Widget& rhs) const
+	{
+		return lhs.maxSpeed() < rhs.maxSpeed();
+	}
+};
+此代码特话的不止一个模板，而是std里面的模板。
+其实这也是部分合理的 比如智能指针的创造者希望他们的类能够像cpp内置指针一样进项排序，所以，针对智能指针的类的std::less特化版本并不少见
+cpp允许程序员做出一些合理的假设。like 假设构造函数总是完成复制的任务。 假设娶一个对象的地址总是会得到一个指向地址的指针。假设bind1st和not2这种适配器可以应用到函数的对象上。
+在stl中，凡是使用less的地方都可以指定另一个不同的比较类型，本例中，只需要创建一个函数子类，让这个子类完成你所希望的比较操作。
+struct MaxSpeedCompare : 
+	public binary_function<Widget, Widget, bool> {
+	bool operator()(const Widget& lhs, const Widget& rhs) const
+	{
+		return lhs.maxSpeed() < rhs.maxSpeed();
+	}
+};
+multiset<Widget, MaxSpeedCompate> widgets;
+应该尽量避免less的行为，如果使用less，确保与operator<具有相同的意义。
