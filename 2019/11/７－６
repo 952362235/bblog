@@ -1,0 +1,16 @@
+effective stl 47
+第四十七条 避免产生直写型（write - only）代码
+删除一个vector<int>中所有值小于x的元素
+vector<int> v;
+int x, y;
+v.erase(remove_if(find_if(v.rbegin(), v.rend(),
+	bind2nd(greater_equal<int>(), y)).base(),
+	v.end(),
+	bind2nd(less<int>(), x)),
+	v.end());
+分解
+typedef vector<int>::iterator VecIntlter;
+VecIntlter rangeBegin = find_if(v.rbegin(), v.rend(),
+	bind2nd(greater_equal<int>(), y)).base();
+//初始化rangebegin 让他指向v中大于等于y的最后一个元素之后的元素
+v.erase(remove_if(rangeBegin, v.end(), bind2nd(less<int>(), x)), end());
