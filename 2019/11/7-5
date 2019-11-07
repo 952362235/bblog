@@ -1,0 +1,71 @@
+effective stl 46
+第四十六条 考虑使用函数对象而不是函数作为stl算法的参数
+将函数对象（既可以被伪装成函数的对象）传递给stl算法往往比传递实际的函数更加高效
+1： vector<double> v;
+sort(v.begin(), v.end(), greater<double>());
+2: 
+incline
+bool doubleGreater(double d1, double d2)
+{
+	return d1 > d2;
+}
+sort(v.begin(), v.end(), doubleGreater);
+greater<double>的sort调用比doubleGreater的sort快的多
+原因：函数内联 如果一个函数对象的operator()函数已经被声明为内联，那么他的函数体可以直接被编译器使用，而大多数编译器都乐于在被调算法的模板实例化过程中将函数内联进去。
+在c / cpp中并不能真正的将一个函数作为参数传递给另一个函数，如果我们试图将一个函数作为参数进行传递，则编译器会隐式的将他转换成一个指向该函数的指针
+并将该函数传递过去。
+函数的指针抑制了内联机制。这正好解释了为什么cpp的sort算法就性能而言总是优于c的qsort
+虽然cpp必须先实例化函数模板和类模板，然后再调用相应的operator()函数，相比之下c只是进行了函数调用
+但是cpp的所有这些额外负担都在编译期间消失殆尽。在运行时，sort以内联调用比较函数，qsort通过指针调用函数。
+还有另一个原因优先使用函数对象，就是让程序正确的通过编译。
+stl平台可能会拒绝一些合法的代码。例如 把一个集合中的每个字符串对象长度输出到cout 却无法编译
+set<string> s;
+transform(s.begin(), s.end(),
+	ostream_iterator<string::size_type>(cout, "\n"),
+	mem_fun_ref(&string::size));
+这个特定的stl平台在处理sonst成员函数的时候有一个错误 一个解决方法就是用函数对象代替函数
+struct StringSize :
+	public unary_function<string, string::size_type> {
+	string::size_tyoe operator()(const string& s) const {
+		return s.size();
+	}
+};
+transfrom(s.begin(), s.end(),
+	ostream_iterator<string::size_type>(cout, "\n"),
+	StringSize());
+第三个原因 避免一些奇妙的语言本身的缺陷
+当一个函数模板的实例化名称不完全等同于一个函数的名称是，就可能出现这样的情况
+template <typename FPType>
+FPType average(FPType val1, FPType val2)                    /返回两个浮点数的平均值
+{
+	return(val1 + val2) / 2
+}
+template<typename Inputlter1, typename Inputlter2>
+void writeAverages(Inputlter1 begin1, Inputlter end1,             //把两个序列的值按顺序对应取平均然后写入流中
+	Inputlter2 begin2,
+	osteram& s)
+{
+	transform(
+		begin1,end1,begin2,
+		ostream_iterator<typename iterator_traits<Inputlter1>::value_type>(s,"\n"),
+		ostream& s)
+}
+ 在理论上可能有另一个名为average的函数模板，只带一个类型参数，这样的话会阐释二义性。解决他只需使用一个函数对象代替函数
+	 templat<typename FPType>
+	 struct Average:
+	 public binary_function<FPType, FPType, FPType>{
+	 FPType operator()(FPType val1, FPType cal2) const
+	 {
+		 return average(val1, val2);
+	 }
+ };
+ template <typename Inputlter1, typename Inputlter2>
+ void writeAverages(Inputlter1 begin1, Iputlter1 end1,
+	 Inputlter2 begin2, ostream& s)
+ {
+	 transform(
+		 begin1,end1,begin2,
+		 ostream_iterator<typename iterator_traits<Inputlter1>::value_type>(s,"\n"),
+		 Average<typename iterator_traits<Inputlter1>::value_type>
+	 )
+ 
