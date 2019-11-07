@@ -8,4 +8,5 @@
 　 [2019/11/7-2 stl43](https://github.com/952362235/bblog/blob/master/2019.11.7%20-2)
 　 [2019/11/7-３ stl44](https://github.com/952362235/bblog/blob/master/2019.11.7%20-3)
 　　[2019/11／７-4 stl45](https://github.com/952362235/bblog/blob/master/%EF%BC%92%EF%BC%90%EF%BC%91%EF%BC%99%EF%BC%8F%EF%BC%91%EF%BC%91%EF%BC%8F%EF%BC%97%EF%BC%8D%EF%BC%94)
-　　[2019/11／７-4 stl46](https://github.com/952362235/bblog/blob/master/2019/11/7-5)
+　　[2019/11／７-5 stl46](https://github.com/952362235/bblog/blob/master/2019/11/7-5)
+　　[2019/11／７-6 stl47](https://github.com/952362235/bblog/blob/master/2019/11/%EF%BC%97%EF%BC%8D%EF%BC%96)
