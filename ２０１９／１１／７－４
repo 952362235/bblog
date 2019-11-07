@@ -1,0 +1,62 @@
+effective stl 45
+第四十五条 正确区分 count, find, binary_search, lower_bound, upper_bound和equal_range
+1.假设你有一对迭代器，制定了一个被搜索的区间
+（1）排序过的 binary_search, lower_bound, upper_bound和equal_range可以获得更快的查找速度  对数时间运行  等价性
+（2）未排序过 count, count_if, find, find_if 仅能提供线性时间的效率  相等性
+find找到第一个匹配结果马上就返回了，count必须达到区间的末尾
+测试一个排序区间中是否存在某个特性的值，使用binary_search   返回的是一个bool值    可以应用在排序上
+一个值是否在排序区间中，如果是，他在哪  equal_range
+使用lower_bound查找特定值，返回一个迭代器，迭代器指向该值的第一份副本，或者一个适合插入该值的位置。
+其是等价性搜索的，所以必须检查lower_bound返回的迭代器所指向的对象是否等价于你要查找的值。
+equal_range返回一对迭代器：第一个迭代器等于lower_bound返回的迭代器，第二个迭代去等于upper_bound返回的迭代器
+1.如果返回的两个迭代器相同，说明没找到这样的值。可以这样使用equal_range
+vector<Widget> vw;
+sort(vw.begin(), vw.end());
+typedef vector<Widget>::iterator VWIter;    //用类型定义提供方便
+typedef pare<VWIter, VMIter> VWIterPair;
+VWIterPair p = equal_range(vw.begin(), vw.end(), w);
+if (p.first != p.second) {
+	...
+}
+else {
+	...
+}
+2.euqal_range返回的迭代器之间的距离与这个区间中的对象数目是相等的，也就是原始区间中与被查找的值的等价的对象数目。
+不仅完成了find的工作，同时也代替了count。
+VWIterPair p = equal_range(vw.begin(), vw.end(), w);
+cout << "There are" << distance(p.first, p.second)
+<< "element in vw equivalent to w.";
+
+class Timestamp{...};
+bool operator<(const Timestamp& lhs, const Timestam& rhs);
+vector<Timestamp> vt;
+sort(vt.begin(), vt.end());
+一个时间戳agelimit 希望去除所有在agelimit之前的对象
+Timestamp agelimit;
+vt.erase(vt.begin(), lower_bound(vt.begin(), vt.end(), agelimit));
+删除至少与agelimit一样老的对象
+vt.erase(vt.begin(), upper_bound(vt.begin(), vt.end(), agelimit));
+如果想在一个排序区间插入一些对象，并希望等价的对象保持他们在插入时的顺序，upper_bound也很有用
+class Person {
+public: 
+	...
+	const sting& name()const;
+	...
+};
+struct PersonNameless :
+	public binary_fnction<person, person.bool> {
+	bool operator()(const Person& lhs, const Person& rhs) const
+	{
+		return lhs.name() < rhs.name();
+	}
+};
+list<Person> lp;
+lp.sort(PersonNamelesses());
+Person newPerson;
+lp.insert(upper_bound(lp.begin(), lp.end(), newPerson, PersonNameless()), newperson);
+2.容器 对于序列容器（vector,string,deque,lis）可以用容器的begin和end迭代器来指明区间。
+对于关联容器（set，multiset,map,multimap)，只需要选择同名的成员函数，只有binary_search是例外，没有对应的成员函数
+要在关联容器中统计个数，使用count是非常安全的。
+1.他的用法清晰就是计数
+2.使用count简单 不需要创建迭代器，再把迭代器传递给distance
+3.速度快
