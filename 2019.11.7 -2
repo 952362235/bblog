@@ -1,0 +1,35 @@
+effective stl 43 
+第四十三条 算法调用优先于手写的循环
+算法使用迭代器制定一个对象的区间，循环遍历这个区间。算法的内部是循环的，意味着你本该编写循环来完成的任务也可以使用stl算法来完成。
+class Widget {
+public: void redraw() const;
+};
+当你想重画一个list中的所有Widget对象的时候，可以用一个循环来完成。
+list<Widget> lw;
+for (list<Widget>::iterator i = lw.begin(); i != lw.end(); ++i) {
+	i->redraw();
+}
+也可以选择使用for_each算法来完成
+for_each(lw.begin(), lw.end(), mem_fun_ref(&Widget::redraw));
+虽然调用循环对写代码更简单，然而本条款告诉你，事实上调用算法优先于任何一个手写循环。三点理由
+1.效率 
+2.正确性  保证你所使用的迭代器是有效的，而且指向你所希望的地方
+3.可维护性
+效率方面有三个理由 1.次要的 循环需要检查lw.end() 每次循环都需要调用一次
+2.类库实现者根据对容器实现的了解对遍历过程进行过优化，这是库的使用者难以做到的。
+3.几乎所有的stl算法使用了复杂的计算机科学算法，有些算法极其复杂，并非一般的cpp程序员所能达到的。
+要想表面在一次迭代中该完成使命工作，则使用循环比算法更加清晰。比如确定一个矢量中第一个大于x，小于y的元素。
+循环:
+vector<int> v;
+int x, y;
+vector<int>::iterator i= v.begin()
+for (; i != v.end(); ++i) {
+	if (*i > x && *i < y)
+		break;
+}
+用find_if实现也是可以的，但是要求你使用一个非标准的函数对象适配器
+vector<int> ::iterator i =
+find_if(v.begin(), v.end(),
+	compose2(logical_and<bool>(),
+		bind2nd(greater<int>(), x),
+		bind2nd(less<int>(), y)));
