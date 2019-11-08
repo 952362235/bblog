@@ -11,3 +11,4 @@
 　　[2019/11／７-5 stl46](https://github.com/952362235/bblog/blob/master/2019/11/7-5)
 　　[2019/11／７-6 stl47](https://github.com/952362235/bblog/blob/master/2019/11/%EF%BC%97%EF%BC%8D%EF%BC%96)
 　　　  2019/11/8的笔记  [2019/11/8-1 stl48 49 50](https://github.com/952362235/bblog/blob/master/2019/11/8-1)
+         [2019/11/8-1 more effective 1 2 3 4](https://github.com/952362235/bblog/blob/master/2019/11/8-2)
