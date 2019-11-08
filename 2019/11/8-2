@@ -1,0 +1,102 @@
+more effective c++ 1 2 3 4
+条款一 仔细区别pointers和references
+1.不允许变量为null 使用reference 
+2.由于reference必须代表某个对象，所以必须初始化。 pointers可以只声明不定义 
+没有null reference说明使用前不需要测试有效性，使用pointers通常要测试是否为null
+3.point可以被重新赋值，指向另一个对象，reference却总是指向初始对象。
+4.当实现某些操作符时，使用reference   比如operator[] 必须返回某种能够当作assignment赋值对象的东西
+条款二 最好使用cpp转型操作符
+为了解决c旧式转型的缺点，cpp导入了4个新的转型操作符
+static_cast,const_cast,dynamic_cast,reinterpret_cast
+static_cast<type>(expression)
+static_cast拥有与c旧式转型相同的威力和意义，以及相同的限制
+static_cast不能移除表达式的常量性，因此const_cast专司其职
+class Widget{...};
+class SpecialWidget:public Widget{...};
+void update(SpecialWidget* psw);
+SpecialWidget sw;
+const SpecialWidget& csw = sw;
+update(&csw);      //错误 
+update(const_cast<SpecialWidget*>(&csw));
+update((SpecialWidget*)& csw);    //c旧式转型语法
+dynamic_cast 用来执行继承体系中的安全的向下转型或跨系转型动作。将指向基类对象的pointers或reference转型为继承类的，并得知是否转型成功，若果失败，会以null指针或者exception表现
+Widget *pw;
+...
+update(dynamic_cast<SpecialWidget*>(pw));
+void updateViaRef(SpecialWidget& rsw);
+updateViaRef(dynamic_cast<SpecialWidget&>(*pw));
+reinterpret_cast的转换结果几乎总是与编译平台息息相关，所以reinterpre_casts不具有移植性。
+reinterpret_cast最常用的用途是转换函数指针类型。
+typedef void (*FuncPtr)();
+FuncPtr funcPtrArray[10];         //funcPtrArray是个内有10个指针的数组 
+希望把函数的一个指针放进funcPtrArray中
+int dosomething();
+funcPtrArray[0] = reinterpret_cast<FuncPtr>(&dosomething);
+条款3 绝对不要以多态方式处理数组
+cpp允许你通过base class的pointers和reference来操作derived class objects所形成的数组，但他几乎不会如你所预期的运作
+class BST{...};
+class BalancedBST:public BST {...};
+void printBSTArray(ostream& s, const BST array[], int numElements)
+{
+	for (int i = 0; i < numElements; ++i) {
+		s << array[i];
+	}
+}
+BST BSTArray[10];
+printBSTArray(cout, BSTArray, 10)
+BalancedBST bBSTArray[10];
+printBSTArray(cout, bBSTArray, 10);
+array[i]其实是*(array+i)  derived classes和base clsses的元素大小不一样 所以+i得到的结果对于数组而言是错误的
+条款4 非必要不提供default constructor
+default constructor就是在没有任何外来信息的情况下将对象初始化
+考虑针对公司仪器而设计的class，设备识别码是一定要有的一个constructor自变量：
+class EquipmentPiece {
+Public:
+	EquipmentPiece(int IDNumber);
+	...
+};
+EquipmentPiece缺乏constructor，运行可能在三种情况下出现
+1 在产生数组的时候
+三个方法侧面解决束缚（1）使用non - heap数组，在定义数组时提供笔要的自变量
+int ID1, ID2, ID3, ..., ID10;
+EquipmentPiece bestPieces[] = {
+	EquipmentPiece(ID1),
+	EquipmentPiece(ID2),
+	EquipmentPiece(ID3),
+	...
+};
+（2）使用指针数组而非对象数组
+typedef EquipmentPiece* PEP;
+PEP bestPiece[10];
+PEP* bestPieces = new PEP[10];
+for (int i = 0; i < 10; ++i)
+	bestPieces[i] = new EquipmentPiece(ID Number);
+此法有两个缺点1.必须记得删除此数组所指的所有对象，否则资源泄露
+2.你需要内存总量比较大。
+过度使用内存这个问题可以避免，方法时先为数组分配raw memory，然后使用placement new在内存上构造对象
+void* rawMemory =
+operator new[](10 * sizeof(EquipmentPiece));
+EquipmentPiece* bestPieces =
+statci_cast<EquipmentPiece*>(rawMemory);
+for (int i = 0; i < 10; ++i)
+	new (&bestPieces[i]) EquipmentPiece(ID Number);
+placement new 要在数组内的对象结束生命时，以手动方式调用其destructors，还需要调用operator delete[]释放raw memory
+for (int i = 9; i >= 0; --i)
+bestPieces[i].~EquipmentPiece();
+operator delete[](rawMemory);
+2.不适用于许多template-based container classes,对于这些templates而言，被实例化的目标类型必须得有一个default constructers.
+引文这些templates内几乎总会产生一个以template类型参数作为类型而架构起来的数组
+template<class T>
+class Array {
+public:
+	Array(int size);
+private:
+	T* data;
+};
+template<class T>
+Array<T>::Array(int size)
+{
+	data = new T[size];
+}
+3.virtual base classes如果缺乏default constructors,会产生严重的问题
+引文virtual base class constructors的自变量必须由产生对象的派生层次最深的class提供。一个缺乏default constructors的virtual base classes，要求所有derived class知道其constructors自变量。
