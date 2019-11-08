@@ -1,0 +1,19 @@
+effective stl 48 49 50
+第四十八条 总是包含（#include）正确的头文件
+不同的平台需要不一样的#include指令
+1.几乎所有的标准stl容器都被声明在与之同名的头文件中，比如vector被声明在<vector>中，list在<list>中
+但是<set>和<map>是个例外，<set>中声明了set和multiset，<map>中声明了map和multimap
+2.除了4个stl算法(accumulate, inner_product, adjacent_difference, partial_sum)被声明在<iterator>中，其他的所有算法在 < algorithm>
+3.特殊类型的迭代器，包括isteram_iterator和istreambuf_iterator被声明在 < iterator>
+4.标准的函数子（like less<T>）和函数子配接器（like not1, bind2nd）被声明在<functional>
+第四十九条 学会分析与stl相关的编译器诊断信息
+vector<int> v(10);   正确
+string s(10);   不能编译
+1.vector和string的迭代器通常就是指针，所以但个错误的使用了iterator时，诊断信息可能引用到指针类型。
+2.如果诊断信息中提到了back_insert_iterator,front_inster_iterator或者insert_iterator，几乎总是意味着你错误的调用了back_inserter,front_inserter,inserter.
+如果你没有直接调用这些函数，则一定是你所调用的某个函数直接或间接的调用这个这个函数
+3.如果诊断信息提到了binder1st或者binder2nd，那么你可能错误的使用了bind1st和binder2nd
+第五十条 熟悉与stl相关的web站点
+1.SGI STL站点
+2.STLport站点
+3.Boost站点
