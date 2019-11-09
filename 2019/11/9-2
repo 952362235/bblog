@@ -1,0 +1,73 @@
+more effective 6 7
+条款六 区别increment/decrement操作符的前置和后置形式
+重载函数是以其参数类型来区分彼此的，然而++ --操作符没有参数，所以只好让后置式有一个int自变量，在他被调用时，编译器默默为该int指定为0
+class UPInt {
+public:
+	UPInt& operator++();
+	const UPInt operator++(int);
+
+	UPInt& operator--();
+	const UPInt operator--(int);
+};
+UPInt i;
+++i;                   //i.operator++();
+i++;                   //i.operator++(0);
+--i;                   //i.operator--();
+i--;                   //i.operator--(0);
+前置式返回一个reference，后置式返回一个const对象。
+前置 increment and fetch  累加后取出
+UPInt& UPInt::operator++()
+{
+	*this += 1;
+	return *this;
+}
+后置 fetchand increment  取出然后累加
+const UPInt UPInt::operator++(int)
+{
+	UPInt oldValue = *this;
+	++(*this);
+	return oldValue;
+}
+为什么后置式返回的对象是个const 如果不这样，下面操作是合法的：
+UPInt i;
+i++++;
+和以下操作相同
+i.operator++(0).operator++(0);
+两个理由不欢迎这样的情况
+1.它和内建类型的行为不一致 设计classes的一条无上宝典就是 当设计一个类遇到问题时，一个好的准则是使该类的行为与int类型一致。而int类型不允许连续进行两次后缀increment：++++i则合法
+2.即使能够两次实施后置式increment操作符，行为也并非预期。第二个operator++所改变的对象是第一个返回的对象，而不是原对象
+处理用户定制类型时，尽可能使用前置性increment，因为他的效率更好
+条款7 千万不要重载&&，||和，操作符
+和C一样，C++对于真假值表达式采用所谓的骤死式评估方式，一旦表达式真假值确定，即使表达式后面还用部分尚未检验，整个评估方式宣告结束
+如果operator&&和operator||，从根本层次改变了整个游戏的规则，因为从此函数调用语义会取代骤死式语义：
+if(expression1 && expresson2)
+会被编译器视为以下二者之一
+if (expression1.operator&&(expression2))  //operator&&是个member function
+if (operator&&(expression1,expression2))  //operator&&是个全局函数
+两个重要区别1.当函数调用操作被执行，所有参数值都必须评估完成。
+2.语言规范并未明确定义函数调用操作中各参数的评估顺序，所以没办法知道1和2哪个先被评估，骤死式总是从左向右评估自变量。
+逗号操作符用来构成表达式，比如在for循环的更新区
+void reverse(char s[])
+{
+	for (int i = 0, j = strlen(s) - 1;
+		i < j;
+		++i, --j)
+	{
+		int c = s[i];
+		s[i] = s[j];
+		s[j] = c;
+		          	
+	}
+}
+表达式如果内含逗号，那么逗号左侧会先被评估，然后逗号的右侧再被评估。最后整个逗号表达式的结果以逗号右侧的值为代表（返回值）。
+以下操作符不能重载：
+.     .*       ::         ?:
+	new
+	delete
+	sizeof
+	typeid
+    static_cast
+	dynamic_cast
+	const_cast
+	reinterpret_cast
+
