@@ -14,5 +14,5 @@
          [2019/11/8-2 more effective 1 2 3 4](https://github.com/952362235/bblog/blob/master/2019/11/8-2)
         2019/11/9的笔记 [2019/11/9-1 more effective 5](https://github.com/952362235/bblog/blob/master/2019/11/9-1)
 [2019/11/9-2 more effective 6 7](https://github.com/952362235bblog/blob/master/2019/11/9-2)
-[2019/11/9-3 more effective 8]）(https://github.com/952362235/bblog/blob/master/2019/11/9-3)
-[2019/11/9-4 more effective 9] (https://github.com/952362235/bblog/blob/master/2019/11/9-4)
+[2019/11/9-3 more effective 8](https://github.com/952362235/bblog/blob/master/2019/11/9-3)
+[2019/11/9-4 more effective 9](https://github.com/952362235/bblog/blob/master/2019/11/9-4)
