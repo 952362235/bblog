@@ -1,0 +1,55 @@
+more effecitve 8
+条款8 了解各种不同意义的new和delete
+new operator（就是所谓的new expression)和operator new之间的差异
+string* ps = new sting("Memory Management");
+这里的new是所谓的new operator。这个操作符是有语言内建的，不能被改变意义，总是做相同的事情。
+操作分为两方面1.它分配足够的内存，用来放置某类型的对象。
+2.调用一个constructor，为刚才分配的内存中的那个对象初始化
+new operator总是做这两件事情，无论如何你不能改变其行为。
+void* operator new(size_t size);
+其返回一个指针，指向一块原始的，未初始化的内存。函数中的siez_t参数表示需要分配多少内存。你可以将operator new重载，加上额外的参数，但第一参数的类型必须总是size_t.
+和malloc一样，operator new的唯一任务就是分配内存。他不知道什么是constructors，operator new只负责内存分配。取得operator new返回的内存并将之转化为一个对象，是new operator的责任。
+这就是如果你想要做出一个heap-based object，一定要使用new operator的原因：你无法直接调用对象初始化所需的constructor。
+placement new
+分配好的原始内存，在上面构造对象，调用constructor。
+class Widget {
+public:
+	Widege(int widgetSize);
+};
+Widget* constructWidgetInBuffer(void* buffer, int widgetSize)
+{
+	return new (buffer) Widget(widgetSize);
+}
+此函数返回指针，指向一个Widgetobject，他被构造于传递给此函数的一块内存缓冲区上。当程序运行到shared memorey或memorey-mapped I/O，这类函数可以将对象置于特定位置，或者置于特殊函数分配出来的内存上。
+被调用的operator new除了接受一个有的size_t自变量之外，还要接受一个void*参数，指向一块内存，准备用来接受构造好的对象。这就是placement new
+void* operator  new (siez_t, void* location)
+{
+	return location;
+}
+#include <new>
+删除与内存释放 deletionand deallocation
+To avoid the resource leask, 每个动态分配行为必须匹配一个相应的释放动作，函数operator delete对于delete operator就好像operator new 对于new operators
+string* ps;
+delete ps;
+内存释放动作是由函数operator deltet执行：
+void operator delete (void* memoryToBeDeallocated);
+delete ps;
+相当于这样的代码：
+ps->~string();
+operator delete(ps);
+如果你只打算处理原始的，未设置初始值的内存，应该完全回避new operator 和delete operators改调用operator new取得内存并以operator delete归还给系统
+void* buffer = operator new(50 * sizeof(char));
+operator delete(buffer);
+这组行为在cpp中相当于malloc和free
+如果使用placement new，在某内存块产生对象，他应该避免对那块内存使用delete operator。为了抵消对象constructor的影响，直接调用对象的destructor
+void* mallocShared(size_t size);
+void freeShared(void* memory);
+void* sharedMemory = mallocShared(sizeof(Widgetr));
+Widget* pw = constructWidgetInBuffer(sharedMemory, 10);
+delete pw;       //无定义 不是来自operator new
+pw->~Widget();   //析构对象不释放内存
+freeShared(pw);
+数组
+string* ps = new string[10];
+operator new[]必须针对数组中的每个对象调用一个constructor。与new operrator所调用的constructor数量不同
+同理 delete operator用于数组，针对数组中的每个元素调用其destructor，然后再调用operator delete[]释放内存
