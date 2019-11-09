@@ -1,0 +1,81 @@
+more effective 操作符 5
+	 条款五 对定制的类型转换函数保持警觉
+	 两种函数允许你编译器执行类型转换 1.单自变量constructors和隐式类型转换操作符。
+	 class Name {
+	 public:
+		 Name(const string& s);                    //把string转换为Name
+		 ...
+ };
+ class Rationgal {
+ public:
+	 Rational(int numerator = 0,                      //把int转化为Rational
+		 int deenominator = 1);
+ };
+
+ class Rational {
+ public:
+	 operator double() const;
+ };
+ Rational r(1, 2);                    //r=1/2
+  double d = 0.5 * r;                 //r转化为double 
+隐式类型转换操作符的缺点，出现可能导致错误的函数被调用。
+解决的方法就是以功能对等的另一个函数取代类型转换操作符。
+class Rational {
+public:
+	double asDouble() const;
+};
+cout << nr.asDouble()；
+通过单自变量constructors完成的隐式转换难以消除：
+template <class T>
+class Array {
+public:
+	Array(int lowBound, int highBound);
+	Array(int size);
+	T& operator[] (int index);
+};
+考虑一个用来Array<interesting>对象进行比较动作的函数：
+bool operator==(const Array<int>& lhs,
+	const Array<int>& rhs);
+Array<int> a(10);
+Array<int> b(10);
+for (int i =0; i < 10; ++i)
+	if (a == b[i]) {                       //a[i]打成了a
+		dosonmeting for when
+			a[i] and b[i] are equal;
+	}
+	else {
+		do something for when they're not;
+	}
+因为输入错误，产生了类似这样的代码
+for (int i = 0; i < 10; ++i)
+	if (a ==static_cast< Array<int> >(b[i]))
+希望阻止编译器自行调用这样的constructors有两种方法
+1.explicit  只需constructors要声明为explicit，编译器不能因为隐式类型转换的需要而调用，不过显性转换仍然被允许。
+template<class T>
+class Array {
+public:
+	explicit Array(int size);
+};
+Array<int> a(10);
+Array<int> b(10);
+if (a ==b[i])               //错误
+
+if (a == Array<int>(b[i]))
+
+if (a == static_cast< Array<int> >(b[i]))   // >> 之间需要加空格 否则编译器将其视为单一的词源
+
+if (a == (Array<int>b[i]))
+2.没有任何一个转换程序可以内含一个以上的用户定制行为转换，为了架构你的class，用此规则让你希望拥有的对象构造行为合法化，并让你不希望允许的隐式构造非法化
+template<class T>
+class Array {
+public:
+	class ArraySize{
+	ArraySize(int numElements): theSize(numElements){}
+	int size() const { return theSize; }
+private:
+	int theSize;
+};
+	Array(int lowBound, int highBound);
+	Array(ArraySize size);
+};
+
