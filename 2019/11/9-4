@@ -1,0 +1,90 @@
+more effective 9
+异常 为什么要使用exceptions  exceptinon无法被忽略
+如果一个函数利用设定状态变量的方式或是利用返回错误码的方式发出一个异常信号，无法保证此函数的调用者会检查那个变量或检验那个错误码
+于是程序的执行会一直继续下去，远离错误发生地点。
+但是如果函数以抛出exception的方式发出异常信号，而该exception未被捕捉，程序的执行便会立刻终止。
+c程序员唯有以setjmp和longjmp才能近似此行为，但是longjmp在cpp中有严重的缺陷。当他调用栈的时候，无法调用局部对象的destructor。大部分cpp很依赖与destructor，所以cpp需要c++exception。
+条款九 利用destructors避免泄露资源
+编写软件为小动物收养保护中心：
+class ALA {
+public:
+	virtual void processAdoption() =0
+};
+class puppy : public ALA{
+	public;
+   virtual void processAdoption() = 0
+};
+class Kitten : public ALA {
+public:
+	virtual void processAdoption();
+};
+ALA* readALA(istream& s);      //从s读取动物信息，返回指针指向新分配的对象。
+void processAdoption(istream& dataSource)
+{
+	while (dataSource) {
+		ALA* pa = readALA(dataSource); 
+			pa->processAdoption();
+			delete pa;            //每次迭代后删除pa 当readALAA被调用，便会产生新的heap object，没有调用delete，巡回会资源泄露
+	
+	}
+}
+pa->processAdoption(); 抛出一个excepption，后面跳过，pa不会被删除，资源泄露。
+void processAdoptions(istream& dataSourece）
+	{
+		while (dataSource)
+		ALA * pa = readALA(dataSource);
+try {
+	pa->processAdoption(;
+	}
+catch (...) {
+delete pa;
+throw;
+	}
+delete pa;
+		}
+调用c++ 标准库的auto_ptr的class template.
+template<class T>
+		class auto_ptr {
+		public:
+			auto_ptr(T *p = 0):ptr(p) {}
+			~auto_ptr() {
+				delete ptr;
+			}
+		private:
+			T* ptr;
+
+		};
+		由于auto_ptr desturcterr采用单一对象形式的delete，所以不适合取代数组对象的指针  [个人建议使用shared_ptr]
+			手写一个类似auto_ptr的template用于数组，更好的选择是用vector代替数组
+			void processAdoptiojn(istream& dataSource)
+		{
+			while (dataSource) {
+				auto_ptr<ALA> pa(readALA(dataSource));
+				pa->processAdoption();
+			}
+		}
+		两点不同 1.pa被声明为一个auto_ptr<ALA>对象，不再是指针
+			2.循环不再有delete
+			考虑GUI应用软件终端某个函数，他必须产生一个窗口显示某些信息：
+			void displayInfo(const Information & info)
+		{
+			WINDOW_HANDLE w(createWindow());
+			display info in window corresponding to w;
+			destroyWindow(w);
+	}
+		设计一个class，令其constructor和destructor分别取得资源和释放资源：
+			class WindowHandle {
+			public:
+				WindowHandle(WINDOW_HANDLE handle): w(handle){}
+				~WindowHandle() {
+					destroyWinddow(w);
+				}
+				operator WINDOW_HANDLE() {
+					return W;
+				}
+			private:
+				WINDOW_HANDLE W;
+				WindowHandle(const WindowHandle&);
+				WindowHandle& operator+(const WindowHandle&);
+		};
+		
