@@ -16,3 +16,4 @@
 　[2019/11/9-2 more effective 6 7](https://github.com/952362235/bblog/blob/master/2019/11/9-2)
 　[2019/11/9-3 more effective 8](https://github.com/952362235/bblog/blob/master/2019/11/9-3)
 　[2019/11/9-4 more effective 9](https://github.com/952362235/bblog/blob/master/2019/11/9-4)
+[2019/11/11-1 more effective 10](https://github.com/952362235/bblog/blob/master/2019/11/11-1）
