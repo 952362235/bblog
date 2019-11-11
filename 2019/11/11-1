@@ -1,0 +1,143 @@
+条块10 在constructors内阻止资源泄露
+开发一个多媒体通信薄软件，包含人名地址电话号码等文字和一个相片与声音。
+class Image {
+public:
+	Image(const string& imageDataFileName);
+	...
+};
+class AudioClip {
+public:
+	AudioClip(const string& audioDataFileName);
+	...
+};
+class PhonenNumber {...};
+class BookEntry {
+public:
+	BookEntry(const string& name,
+		const string& address = "",
+		const string& imageFileName = "",
+		const string& audioClipFileName = "");
+	~BookEntry();
+	void addPhoneNumber(const PhoneNumber& number);
+	...
+private:
+	string theName;
+	string theAdderss;
+	list<PhonenNumber> thePhones;
+	Image* theImage;
+	AudioClip* theAudioclip;
+};
+每一个BookEntry必须有姓名数据，所以必须成为一个constructor自变量。
+BookEntry constructor 和 destructor 可以这样设计：
+BookEntry::BookEntry(const string& name,
+	const strin& address,
+	const string& imageFileName,
+	const string& audioClipFileName)
+	: theName(name), theAddress(adderss), theImage(0), theAudioClip(0)
+{
+	if (imageFileName != "") {
+		theImage = new Image(imageFileName);
+	}
+}
+BookEntry::~BookEntry()
+{
+	delete theImage;
+	delete theAudioClip;
+}
+constructor先将指针theTmage和theAudioClip初始化为null，如果非空在指向对象。
+当执行if语句时，exception被抛出。就会发生泄漏。
+设计constructor，使其在未完全构造好时可以进行自我清理。
+通常只需将所有可能的exception捕捉起来，执行某种清理工作,然后重新抛出exception，使他继续传播出去即可：
+BookEntry::BookEntry(const string& name,
+	const strin& address,
+	const string& imageFileName,
+	const string& audioClipFileName)
+	: theName(name), theAddress(adderss), theImage(0), theAudioClip(0)
+{
+	try {
+		if (imageFileName != "") {
+			theImage = new Image(imageFileName);
+		}
+	}
+
+catch (...) {
+	deltet theImage;
+	delete theAudioClip;
+	throw;
+}
+}
+catch和destructor内的动作相同。所以最好把共享代码抽出放进一个private辅助函数内，然后让constructor和destructor都调用他。
+class BookEntry {
+public:
+	...
+private:
+	...
+		void cleanup();
+};
+void BookEntry::cleanup()
+{
+	delete theImage;
+	delete theAudioClip;
+
+}
+让theImagehe theAudioClip都变成常量指针：
+class BookEntry {
+public:
+	...
+private:
+	...
+		Image* const theImage;
+	AudioClip* const theAudioClip;
+};
+这样的指针必须通过构造函数的成员初值链表加以初始化，因为没有其他的方法可以给予const指针一个值：
+BookEntry::BookEntry(const string& name,
+	const strin& address,
+	const string& imageFileName,
+	const string& audioClipFileName)
+	: theName(name), theAddress(adderss),
+	theImage(imageFileName != ""
+		? new Image(imageFileName)
+		: 0),
+	theAudioclip(audioClipFileName !=""
+		? new AudioClip(audioClipFileName)
+		: 0)
+{}在这段代码theAudioclip初始化期间发生exception，所指对象不会别校徽，无法借助try/catch语句，因为memeber intialization lists只接受表达式，这也是为什么使用?:操作符取代if初始化的原因
+既然我们无法把try catch放到成员初始化链表里面，放到private memeber functions内。
+class BookEnttry {
+public:
+...
+private:
+	...
+		Image* initImage(const string& imageFileName);
+	AudioClip* initAudioClip(const string& audioClipFileName);
+};
+BookEntry::BookEntry(const string& name,
+	const strin& address,
+	const string& imageFileName,
+	const string& audioClipFileName)
+	: theName(name), theAddress(adderss),
+	theImage(initImage(imageFileName)),
+	theAudioclip(initAudioClip(audioClipFileName))
+{}
+Image* BookEnry::initImage(const string& imageFileName)
+{
+	if (imageFileName != "") return new Image(imageFileName); \
+	else return 0;
+}
+AudioClip* BookEntry::initAudioClip(const string& audioClipFileName)
+{
+	try {
+		if (audioClipFileName != "") {
+			return new AudioClipp(audioClipFileName);
+		}
+		else return 0;
+	}
+	catch (...) {
+		delete theImage;
+		throw;
+	}
+}
+缺点 概念上应该由constructor完成的动作却选择散布于数个函数中，造成了维护上的困扰。
+一个更好的解答是，根据9，将theImage和theAudioClip所指向对象视为资源，交给局部对象来管理。
+const auto_ptr<Image> theImage;
+const auto_ptr<AudioClip> theAudioClip;
