@@ -1,0 +1,188 @@
+more effective 14
+条款14 明智运用exception specifications
+没有任何方法可以知道一个template的类型参数可能抛出什么exception，所以千万不要为emplate提供exception specification.
+不应该将templates和exception specification混合使用。
+如果a函数调用了b函数，而b函数无exception specification，那么a函数本身也不要设定exception specification。
+有一种情况很容易被忘记，就是当允许用户注册所谓的callback函数时：
+typedef void (*CallBackPtr)(int eventXLocation, int eventYLocation, void* dataToPassBack);
+class CallBack {
+public:
+	CallBack(CallBackPtr fPtr, void *dataToPassBack)
+		: func(fPtr), data(dataToPassBack) {}
+	void makeCallBack(int eventXLocation, int eventYLocation) const throw();
+private:
+	CallBackPtr func;
+	void* data;
+};
+void CallBack::makeCallBack(int eventXLocation, int eventYLocation) const throw()
+{
+	func(eventXLocation, eventYLocation, data);
+}
+处理系统可能抛出的exception，最常见就是bad_alloc，那是内存分配失败由operator new 和operator new[]抛出的。
+条款15 了解异常处理的成本
+为了让exception的相关成本最小化，只要能够不支持exception，编译器便不支持:
+请将你对try语句块和exception spections的使用限制于非用不可的地步，并且在真正的异常情况才抛出exception。
+效率 两个角度
+1.由于他对封装的强力支持，我们有可能将低效率的class实现品以相同接口但拥有较佳算法和数据结构的新产品取代。
+2.产生和销毁过的的对象流失了cpu的时间。
+条款16谨记 80 - 20法则
+一个程序80 % 的资源用于20 % 的代码身上。执行时间，内存，磁盘访问动作，维护。
+基本重点在于，软件的整体性能几乎总是其构成要素的一小部分决定。
+如果识别20 % 代码，借助程序分析器。
+条款17 考虑使用lazy evaluation    四种用途
+一旦你使用lazy evaluation，就是用某种方式撰写你的classses，让他们延缓运算，直到那些运算结果被迫切需要，如果运算结构一直不被需要，运算也就一直不执行。
+1.regerence counting 引用计数
+class String { ... };
+String s1 = "Hello";
+String s2 = s1;
+string copy constructor的常见做法是，一旦s2以s1为初值，便导致s1和s2各有自己的一份hello副本。
+如此的拷贝构造会有相当大的成本，因为他必须为s1的内容做一份副本，交给s2，而通常会伴随着用new operator分配heap内存，并电泳strcpy将s1复制到s2的内存中。这就是eager evaluation。
+2.区分读和写
+String s = "Homer's Iliad";
+cout << s[3];
+s[3] = 'x';
+第一个operator[]调用读取字符串的某一部分，第二个调用则执行写入操作，读取操作代价低廉，但是写入动作需要预先的副本。
+我们必须在operator[]内做不同的事情，如何判断是在读还是写下被调用呢？然而运用lazy evalution和30所说的proxy classes可以延缓决定
+3.lazy fetching 缓慢取出
+你的程序使用大型对象，其中包含许多的字段，必须在程序执行时保持一致性和连贯性，所以他们存储于一个数据库中，，每个对象有个独特的对象识别码，可以用来从数据库取回对象:
+class LargeObject {
+public:
+	LargeObject(ObjectID id);
+
+	congst string& field1() const;
+	int field2() const;
+	double field3() const;
+	const string& field4() const;
+	const string& field5() const;
+};
+由于LagerObject的体积很大，取出所有数据，成本极高。
+void restoreAndProcessObject(ObjectID id)
+{
+	LargeObject	object(id);
+	if (object.field2() == 0) {
+		cout << "Object " << id << ": null field2.\n";
+	}
+}
+此问题的lazy做法是，只产生该对象的外壳，不从磁盘读取任何数据，当被需要时，取回对应数据，下面做法可实现所谓的demand-paged式对象初始化行为：
+class LargeObject {
+public:
+	congst string& field1() const;
+	int field2() const;
+	double field3() const;
+	const string& field4() const;
+	const string& field5() const;
+private:
+	ObjectID oid;
+
+	mutable string* field1Value;              //说明字段可以在任何member functiong内被修改
+	mutable int* field2Value;
+	mutable double* finalValue;
+	mutable string* field4Value;
+};
+LagreObject::LargeObject(ObjectID id)
+	: oid(id), field1Value(0), field2Value(0),...
+{}
+const string& LargeObject::field1() const
+{
+	if (filedValues == 0) {
+		read the data for fiedl 1 from the database and make fieldvalue point to it;
+	}
+	return *field1Value;
+}
+4.lazy exprssion evaluation 表达式缓评估
+最后一个例子来自数值应用：
+template<class T>
+class Matrix { ... };
+
+Matrix<int> m1(1000, 1000);
+Matrix<int> m2(1000, 1000);
+Matrix<int> m3 = m1 + m2;
+operator通常才用eager evalution，此例会计算返回m1和m2的总和，这是个大规模的运算，此外还有大量的内存分配成本。
+lazy evaluation设立了一个数据结构m3中，这样的数据结构可能只是两个指针和一个enum构成，前者指向m1和m2，后者用来指示运算动作是加法。这种速度快，耗费内存少。
+假设，在m3被使用前 程序还有以下操作：
+m3 = m4 * m1;
+通常情况，我们只需要大型运算中的部分运算结果，假如我们将m3初始化为m1和m2的总和后，
+cout << m3[4];      //输出m3的第四行
+c++特别适合由用户完成的lazy evalution的载体，因为它支持封装性质，使我们有可能把lazy evaluation加入某个class内而不必让其他用户知道。
+条款18：分期摊还预期的计算成本
+超急评估 over-eager evaluation.
+考虑一个class template， 用来表现数值数据的大型收集中心：
+template<class  NumericalType>
+class DataCollection {
+public:
+	NumericalType min() const;
+	NumericalType max() const;
+	NumericalType avg() const;
+};
+如果min max avg 常被调用，我们便能够分期摊还，随时记录三个值，而每次调用的成本比eager evaluation和lazy evaluation低
+最简单的就是cache 将已经计算号的有可能再被需要的数值保留下来。
+下面是findCubicleNumber的一种实现方法，其中使用stl提供的map object作为一个局部缓存：
+int findCubicleNumber(const string& employeeName)
+{
+	typedef map<stirng, int> CubicleMap;
+	static CubicleMap cubes;
+	CubicleMap::iterator it = cubes.find(employeeName);
+	if (it == cubes.end()） {
+		int cubicle = 
+			the result of looking up employeeName's cubicle number in the database;
+	cubes[employeeName] = cubicle;
+			return cubicle;
+	}
+	else {
+		return (*it).second;
+	}
+}
+Prefetching是另一种做法（预先支出）
+template<class T>
+class DynArray {..};
+DynArray<double> a;
+a[22] = 3;
+a[32] = 0;
+动态数组在，自动扩张。最简单的策略就是为新加入的索引做内存动态分配行为：
+template<calss,T>
+T& DynArray<T>::operator[](int index)
+{
+	if (index < 0) {
+		throw an exception;
+	}
+	if (index > the current maximum index value) {
+		call new to allocate enough additional memory so the index is valid;
+	}
+	return the indexth element of the array;
+}
+条款19 了解临时对象的来源
+swap函数中，人们常将temp称为一个临时对象，但是在cpp的眼中，temp并不是临时对象，他只是函数中的一个局部对象。
+cpp真正的临时对象是不可见的，只要你产生一个non - heap object而没有为他明明他便诞生了一个临时对象。通常发生在两种情况时
+1. 隐式类型转换被施行起来以求函数调用能成功。
+2.当函数返回对象的时候，了解这些临时对象如何被产生和被销毁，因为其所伴随的构造成本和析构成本可能会对程序性能带来影响。
+size_t countChat(const string & ste, chat ch);
+char buffer[MAX_STRING_LEN];
+char c;
+cin >> c >> setw(MAX_STRING_LEN);
+cout << "There are " << countChar(buffer, c)
+<< "occurrences of the character " << c
+<< "in " << buffer << endl;
+operator+必须返回一个对象，表现其操作数的总和。
+const Number operator+(const Number& lhs, const Number& rhs);
+条款20 协助完成返回值优化RVO
+函数如果返回对象，对效率来说很低，因为以by-value方式返回对象，背后隐藏的constructor和destructor都将无法消除。
+class Rational {
+public:
+	Rational(int numerator = 0, int denominator = 1);
+	int numerator() const;
+	int denominaot() const;
+};
+const Rational operator *(const Rational& lhs, const Rational& rhs);
+必须产生一个新对象并将他返回
+如果函数一定以by-value方式返回对象，无法消除。但是我们可以让编辑器消除临时对象的成本。返回所谓的constructor argument以取代对象
+const Rational operator*(const Rational& lhs, const Rational& rhs)
+{
+	return Rational(lhs.numerator() * rhs.numberator(),
+		lhs.denominator() * rhs.denominator());
+}
+通过表达式你产生了一个Rational临时对象，而函数复制此临时对象，当作返回值。
+inline const Rational operator*(const Rational& lhs, const Rational& rhs)
+{
+	return Rational(lhs.numerator() * rhs.numberator(),
+		lhs.denominator() * rhs.denominator());
+}
