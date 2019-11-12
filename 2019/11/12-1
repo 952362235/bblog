@@ -1,0 +1,143 @@
+more effective 11
+条款11 禁止异常流出destructor之外
+两种情况下destructor会被调用
+1.对象在正常状态下被消耗，就是当他离开了他的生存空间或是被明确的删除；
+2.当对象被exception处理机制——也就是exception传播过程中的stack-unwinding栈展开机制——销毁。
+考虑一个用来监视在线计算的操作做 也就是从你登录开始到退出的所有行为——session class 
+每个Session object 都会记录其构造和析构的日期和师姐：
+class Session {
+public:
+	Session();
+	~Session();
+	...
+private:
+	static void logCreation(Session* objAddr);
+	static void logCDestruction(Session* objAddr);
+};
+Session::~Session()
+{
+	logDestruction(thin);
+}
+如果logDestruction抛出一个exception，这个exception并不会被destructor捕捉，传播到destructor的调用端。但是destructor本身是因其他exception而被调用，terminate函数边自动调用。
+解决：如果logDestruction抛出一个exception,把记录Session析构的任务忘记。
+Session::~Session()
+{
+	try {
+		logDesturction(this);
+	}
+	catch (...) {}
+}
+条款12： 了解抛出一个exception与传递一个参数或调用一个虚函数直接的差异
+函数参数的声明语法，和 catch子句的声明语法一样。
+相同点 函数参数和exception的传递方式有三种 by value， by reference， by pointer
+然后你传递的是参数或exception发生的事情可能完全不同，原因你调用一个函数，控制权最终会回到调用端，但是当你抛出一个exception，控制权不会再回到抛出端。
+istream operator>>(istream& s, Widget& w);
+void passAndThrowWidget()
+{
+	Widget localWidget;
+	cin >> localWidget;
+	throw localWidget;
+}
+不论被捕捉的exception是以by value或by refernece方式传递（不可能以by pointer方式传递——造成类型阜埠河）都会发生localWight的复制行为，而交给catch子句手上的正事是这个副本。
+一旦控制权离开passAndThrowWidget，变量离开了生存空间，destructor会被调用。如果此时本身传递给一个catch子句，此子句是已经被析构过了，已经没用作用了。
+这就是为何cpp要声明一个对象被抛出作为exception，总会发生复制。
+void passAndThrowWidget()
+{
+	static Wiget localWidget;
+	cin >> localWidget;
+	throw localWidget;
+}
+上述函数抛出exception，还是会产生变量的副本，意味着即使exception以by reference方式被捕捉，catch端还是不能修改变量，只能修改副本。
+exception object必定会造成复制。解释了exception比传参慢。
+当对象被复制当做一个exception，复制行为是由对象的copy constructor执行的。copy constructor相当于该对象的静态类型。
+class Widget { ... };
+class SpecialWidget : public Widget { ... };
+void passAndThroWidget()
+	{
+	SpecialWidegt localSpecialWidget;
+	...
+	Widget& rw = localSpecialWidget;
+	throw rw;
+}
+复制的动作以静态为本，这里rw的静态对象是widget。
+exception对象是对其他对象的副本：
+catch (Widget& w)
+{
+	throw;
+}
+catch (Widget& w)
+{
+	throw W;
+}
+两个catch的差异是 前者重新抛出当前exception，后者抛出的是当前exception的副本。
+第一条语句重新抛出exception的类型，第二catch跑出一个新的exception，类型总是widge，因为那是w的静态类型。
+exception与catch类型相匹配。而且不发生隐式转换。仅仅可以发生两种转换，一种是继承架构中的类转换
+第二个允许发生的转换是从一个有型指针转为无型指针，所以一个针对const void* 指针而设计的catch，可以捕捉任何指针类型的exception。
+传递参数用最佳匹配策略，exception机制使用最先匹配策略。
+条款13 以by reference方式捕捉exceptions
+写一个catch语句，必须指明exception objects如何被传递到这个子句。三种选择传值传参传指针。
+首先考虑传指针，不需要复制对象
+class exception { ... };
+void someFunction()
+{
+	static exception ex;                   //如果没有static 函数结束就被销毁
+	throw& ex;
+}
+void doSomething()
+{
+	try {
+		someFunction();
+	}
+	catch (exception* ex) {
+
+	}
+}
+或者不用static 抛出一个指针，指向一个新的heap object：
+void someFunction()
+{
+	throw new exception
+}
+然而指针有缺陷，四个标准的exception统统是对象，而不是指针，所以必须以by value 或by reference方式捕捉。
+class exception {
+public:
+	virtual const char* what() throw();
+};
+class runtime_error :
+	public exception {...};
+class Validation_error :
+	public runtime_error {
+public:
+	virtual const char* what()throw();
+
+};
+void someFunction()
+{
+	if (a avalidation test faile) {
+		throw Validation_error();
+	}
+}
+void doSomething()
+{
+	try {
+		someFunction()；
+	}
+	catch (exception ex) {
+		cerr << ex.what();
+	}
+}
+catch-by-reference不会发生对象删除问题，也没有切割问题，而且exception object只会被复制一次。
+void someFunction()
+{
+	if (a avalidation test faile) {
+		throw Validation_error();
+	}
+}
+void doSomething()
+{
+	try {
+		someFunction()；
+	}
+	catch (exception& ex) {
+	cerr << ex.what();
+	}
+}
