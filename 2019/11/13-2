@@ -1,0 +1,154 @@
+条款26 限制某个class所能产生你的对象数量
+1.允许零个或一个对象
+每当产生一个对象，会有一个constructor被调用。阻止某个class产生对象的简单的做法就是将其constructors声明为private
+class CantBeInstantiated {
+private:
+	CantBeInstantiated();
+	CantBeInstantiated(const CantBeInstantiated&);
+};
+假设我下为打印机设计一个class，我希望设计一个只能存在一台打印机的约束，我们可以将打印机对象封装在某个函数内，如此一来每个人都能够用打印机，但只有一个对象会产生。
+class PrintJob;
+class Printer {
+public:
+	void submitJob(const PrintJob&);
+	void reser();
+	void performSelfTest();
+	...
+		friend Pringter& thePrinter();
+private:
+	Printer();
+	Printer(const Printer& rhs);
+	...
+};
+Printer& thePrinter()
+{
+	static Printer p;
+	return p;
+}
+此设计有三个成分，1.constructors属于private，可以防止产生对象
+2.全局函数thePrinter被声明为friend，不受private constructors的约束
+3.thePrinter内含static对象，表示只产生一个对象。
+thePrinter可以成为Printer的一个static member function。这同时消除了friend的必要性。
+另一个做法是把Printer和thePrinter从全局空间中移走，放进一个namespaces。 namespace可以防止名称冲突。
+有两个地方值得讨论，1.形成唯一一个Printer对象的是函数中的static对象而并未class中的static对象。这是一种lazy。
+另外就是初始化时机，我们确切知道一个functionstatic的初始化时机，函数第一次调用时，做该static别定义出。但是class static不一定做合适初始化。
+2.static对象和inclining的互动。
+函数如果带有内部链接，可能会做程序中被复制，也就是是说程序的目标代码可能会对带有内部连接的函数复制一份以上的代码，而此复制行为也包括函数内的static对象。
+如果你的inline函数包含一个local static对象，你的程序可能有该static对象的副本，所以千万不要产生local static对象的inline非成员函数。
+或许有这样的方法处理打印机：
+class Printer ｛
+	public:
+		class TooManyObjects();
+		Printer();
+		~Printer();
+private:
+	static size_t numObjects;
+	Printer(const Printer& rhs);
+};
+size_t Printer:: = 0;
+Printer::Printer()
+{
+	if (numObjects >= 1) {
+		throw TooManyObjecsts();
+	}
+	++numObjects
+}
+Printer::~Printer()
+{
+	--numObjects；
+}
+2.不同的对象构造状态
+假设我们有一台特别的打印机，比如说彩色打印机，其class和一般打印机的class有许多共同点，所以当然我们会使用继承机制:
+class ColorPrinter : public Printer {
+	...
+};
+假设我们的系统安装了一台一般打印机和一台彩色打印机：
+Printer p；
+ColorPrinter cp;
+避免具体类继承其他的具体类。
+class FSA {
+public:
+	//伪构造
+	static FSA* makeFSA();
+	static FSA* makeFSA(const FSA& rhs);
+private:
+	FSA();
+	FSA(const FSA& rhs);
+};
+FSA * FSA::makeFSA()
+{
+	return new FSA();
+}
+FSA* FST::makeFSA(const FSA& rhs)
+{
+	return new FSA(rhs);
+}
+3.允许对象生生灭灭
+thePrinter函数将唯一对象的各种处理行为封装起来，此法限制了我们在每次执行程序时只能有唯一一个Printer对象。
+如何在程序的不同地点使用不同的Printer对象：
+clas Printer{
+public:
+	class TooManyObjects {};
+	//伪构造
+	static Printer* makePrinter();
+	~Printer();
+	void submitJob(const PrintJob& job);
+	void reser();
+	void perfromSelfTest();
+private:
+	static size_t numObjectsl;
+	Prineter();
+	Printer(const Printer& rhs);
+};
+4.一个用来计算对象个数的Base Class
+template<class BeingCounted>
+class counted {
+public:
+	class TooManyObjects {};
+	static int objectCount() {
+		return numObjects;
+	}
+protected:
+	Counted();
+	Counted(const Counted& rhs);
+	~Counted() {
+		--numObjects;
+	}
+private:
+	static int numObjects;
+	static const size_t maxObjects;
+	void init();
+};
+template<class BeingCounted>
+Counted<BeingCounted>::Counted()
+{
+	iinit();
+}
+template<class BeingCounted>
+Counted<BeingCounted>::Counted(const Counted<BeingCounted>&)
+{
+	iinit();
+}
+template<class BeingCounted>
+void Counted<BeingCounted>::init()
+{
+	if (numObjects >= maxObjects) throw TooManyObjects();
+	++numObjects;
+}
+此template所产生的classes只被设计用来作为基类，因此才有所谓的protected constructor和destructor。private member function init用来避免两个counted constructors出现重复代码。
+clas Printer: private Counted<Printer>{
+public:
+	class TooManyObjects {};
+	//伪构造
+	static Printer* makePrinter();
+	~Printer();
+	void submitJob(const PrintJob& job);
+	void reser();
+	void perfromSelfTest();
+	usting Counted<Printer>::objectCount;
+	usting Counted<Printer>::TooManyObjects;
+private:
+	static size_t numObjectsl;
+	Prineter();
+	Printer(const Printer& rhs);
+};
