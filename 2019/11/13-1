@@ -1,0 +1,169 @@
+more effective 21
+利用重载技术避免隐式类型转换
+class UPInt {
+public:
+	UPInt();
+	UPInt(int value);
+};
+const UPInt operator+(const UPInt& lhs, const UPInt& rhs);
+UPInt upi1, upi2;
+UPInt upi3 = upi1 + upi2;
+upi3 = upi1 + 10
+这些句子可以成功时因为产生了临时对象，将int转换为UPInt。
+不希望承受隐式类型转换产生临时对象所带来的成本，该怎么办。
+声明多个函数，给每个函数加不同的参数表。
+条款22 考虑以操作符复合形式取代其独身形式
+要确保operator+=和operator+之间的自然关系能够存在，一个好方法就是以前者为基础实现后者：
+class Rational {
+public:
+	Rational& operator+=(const Rational& rhs);
+	Rational& operator-=(const Rational& rhs);
+};
+const Rational operator+(const Rational& lhs, const Rational& rhs)
+{
+	return Rational(lhs) += rhs;
+}
+const Rational operator-(const Rational& lhs, const Rational& rhs)
+{
+	return Rational(lhs) -= rhs;
+}
+三个与效率有关的情况值得注意
+1.一般而言，符合操作符比其对应的独身版本效高，因为独身版本通常必须返回一个新对象，而我们必须因此负担一个临时对象的构造和析构成本。
+至于符合版本则是直接将结果写入左端自变量，不需要临时对象来防止返回值。
+2.如果同时提供复合形式和独身形式，允许客户在便利和效率之间做取舍。
+独身形式较易撰写，调式，维护，并在80%时间内供应足可接受的性能
+复合效率高，而且对汇编语言程序员比较直观。
+3.观察operator+实现码：
+template <class T>
+const T operator+(const T & lhs, const T & ths)
+{
+	T result(lhs);
+	return result += ths;
+}
+条款23 考虑使用其他程序库
+两个程序库提供类似的技能，却有相当不同的性能表现。
+iostream和stdio程序库，前者有类型安全特性，并可扩充。然而在效率方面，iostream通常比stdio差，因为后者的可执行文件更小也更快。
+条款24 了解virtualfunctions.multiple inheritance.virtual base classes.runtime type identification的成本
+当一个虚函数被调用，执行的代码必须对应于调用者的动态类型。对象的pointer或reference，其类型是无形的，编译器如何高效提供这种行为呢？
+大多数编译器使用所谓的virtual tables和birtual table pointers 简写为vtbls和vptrs。
+vtbl通常是由函数指针架构而成的数组，某些编译器会以链表取代数组，但基本策略相同。
+程序中的每一个class凡声明或继承虚函数者，都会有一个自己的vtbl，其中条目就是该class的各个虚函数实现体的指针
+一旦由某种方法可以指示出每个对象对应于哪一个vtbl，vtbl才有用，而这正是vptr的任务。
+凡声明有虚函数的class，其对象都含有一个隐藏的data member，用来指向该class的vbtl。这个隐藏的data member就是所谓的vptr被编译器加入对象内后才知道位置。
+技术
+条款25 将constructor和non - member functions虚化
+当你手上有一个对象的pointer或者reference，而你不知道该对象的真正类型是声明的时候，你会调用虚函数以完成因类型而异的行为。
+假设你写一个软件用来处理时事新闻，其内容由文字和图形构成：
+class NLComponent{
+publc:
+...
+};
+class TextBlock: public NLComponent {
+publc:
+...
+};
+class Graphic:public NLComponent {
+publc:
+	...
+};
+class NewsLetter {
+public:
+	...
+private:
+	list<NLComponent*> components;
+};
+class NewsLetter {
+public:
+	NewsLetter(istream& str);
+	...
+}
+constructor从stream读取数据以产生必要的核心数据结构，如果把这个部分搬移到另一个readComponent的函数：
+class NewsLetter {
+public:
+	...
+private:
+	static NLComponent* readComponent(istream& str);
+};
+NewsLetter::NewsLetter(istream& str)
+{
+	while (str) {
+		components.push_bach(readComponent(str));
+	}
+}
+readComponent产生一个新的对象，视读入的数据而定，因为他产生新的对象，所以行为跟constructor相似，称他virtual constructor。
+virtual copy constructor会返回一个指针，指向其调用者的一个新副本。通常以copyself或者cloneself或者clone命名：
+class NLComponent {
+publc:
+	virtual NLComponent* clone() const = 0;
+};
+class TextBlock : public NLComponent {
+publc:
+	virtual TextBlock* clone() const
+	{
+		return new TextBlock(*this);
+	}
+	...
+};
+class Graphic :public NLComponent {
+publc:
+	virtual Graphic* clone() const
+	{
+		return new Graphic(&this);
+	}
+	...
+};
+如果函数的返回类型是个指针，指向一个base class，那么derived class的函数可以返回一个指针，指向该base class的一个derived class。
+class NewsLetter {
+public:
+	NewLetter(const NewsLetter& rhs);
+	...
+private:
+	list<NLComponent*> components;
+};
+NewLetter::NewLetter(const NewsLetter& rhs)
+{
+	for (list<NLComponent*>::const_iterator it =
+		rhs.components.begin();
+		it != rhw.components.end();
+		++it) {
+		components.push_back((*it)->clone());
+	}
+}h
+将Non-Member Functions的行为虚化
+可以让非成员函数的行为视其参数的动态类型而不同。
+举个例子，你希望为TextBlock和Graphic实现出outpu操作符，明显的一个办法就是让output虚化。
+然而output操作符(operator<<)获得一个ostream& 作为左端自变量，不可能成为成员函数的。
+class NLCompponent {
+public:
+	virtual ostream& operator<<(ostream& str) const = 0;
+	...
+};
+class TextBlock : public NLComponent {
+public:
+	virtual ostream& operator<<(ostream& str) const;
+};
+class Graphic: public NLComponent {
+public:
+	virtual ostream& operator<<(ostream& str) const;
+};
+clients必须把stream对象放在<<符号的右手端，这和传统的output操作符不符，如果回到正常形式，不能再把其声明为virtual
+另一中做法是声明虚函数作为打印之用，并在子函数中i当一天。如果那么做子函数的打印语法和其他类型对象的语法不一致。
+我们真正需要的是一个名为operator<<的非成员函数，表现出print虚函数一般的行为，让我们同时定义operator<<和print，并让前者调用后者。
+class NLCompponent {
+public:
+	virtual ostream& print(ostream& s) const = 0;
+	...
+};
+class TextBlock : public NLComponent {
+public:
+	virtual ostream& print(ostream& s) const;
+};
+class Graphic : public NLComponent {
+public:
+	virtual ostream& print(ostream& s) const;
+};
+incline
+osteam& operator<<(ostream& s, const NLComponent& c)
+{
+	return c.print(s);
+}
