@@ -1,0 +1,269 @@
+标准库算法概览
+1. beg和end是表示元素范围的迭代器。几乎所有的算法都对一个由beg和end表示的序列进行操作。
+2. beg2是表示第二个输入序列开始位置的迭代器。end2表示第二个序列的末尾位置。如果没有end2，则假定beg2表示的序列与beg和end表示的序列一样大。
+beg和beg2的类型不必匹配，但是必须保证对两个序列中的元素都可以执行特定操作或调用给定的可调用对象。
+3. dest 是表示目的序列的迭代器。对于给定输入序列，算法需要生成多少元素，目的的序列必须保证能保存同样多的元素。
+4. unaryPred和binaryPred是一元和二元谓词，分别接受一个和两个参数，都是来自输入序列的元素，两个谓词都返回可用做条件的类型。
+5. comp是一个二元谓词，满足关联容器中对关键字序的要求。
+6. unaryOp和binaryOp是可调用对象，可分别使用来组输入序列的一个和两个实参来调用。
+(1)查找对象的算法
+这些算法在一个输入序列中搜索一个指定值或一个值的序列。
+每个算法都提供两个重载的版本，第一个版本使用底层类型的相等运算符==来比较元素，第二个版本使用用户给的的unargPred和bingaryPred比较元素。
+1.简单查找算法
+这些算法查找指定值，要求输入迭代器。
+find(beg, end, val)
+find_if(beg, end, unaryPred)
+find_if_not(beg, end, unaryPred)
+count(beg, end, val)
+count_if(beg, end, unaryPred)
+find返回一个迭代器，指向输入序列中的第一个等于val的元素
+fint_if返回一个迭代器，指向第一个满足unaryPred的元素
+find_if_not返回一个迭代器，指向第一个令unaryPred为false的元素
+上述三个算法在未找到元素时都返回end
+count返回一个计数器，指出val出现了多少次
+count_if统计多少个元素满足unaryPred
+all_of(beg, end, unaryPred)
+any_of(beg, end, unaryPred)
+none_of(beg, end, unaryPred)
+这些算法都返回一个boool值，分别指出unaryPred是否对所有元素都成功，对任意一个元素成功以及对所有元素都不成功，
+如果序列为空，any_of返回false，而all_of和none_if返回true。
+2.查找重复值的算法
+下面这些算法要求前向迭代器，在输入序列中查找重复元素。
+adjacent_find(beg, end)
+adjacent_find(beg, end, binaryPred)
+返回指向第一对相邻重复元素的迭代器。如果序列中无相邻重复元素则返回end。
+search_n(beg, end, count, val)
+serach_n(beg, end, count, val, binaryPred)
+返回一个迭代器，从此位置开始有count个相等元素。如果序列中不存在这样的子序列，则返回end.
+3.查找子序列的算法
+在下面的算法中，除了find_first_of之外，都要求两个前向迭代器。find_first_of用输入迭代器表示第一个序列，前向迭代器表示第二个序列。
+这些算法搜索子序列而不是单个元素。
+search(beg1, end1, beg2, end2)
+search(beg1, end1, beg2, end2, binaryPred)
+返回第二个输入范围在第一个输入范围中第一次出现的位置。如果未找到子序列，则返回end1.
+find_first_of(beg1, end1, beg2, end2)
+find_first_of(beg1, end1, beg2, end2, binaryPred)
+返回一个迭代器，指向第二个输入范围中任意元素在第一个范围中首次出现的位置。如果未找到匹配元素，则返回end1。
+fin_end(beg1, end1, beg2, end2)
+fin_end(beg1, end1, beg2, end2, binaryPred)
+类似search，但返回的是最后一次出现的位置。如果第二个输入范围为空，或者在第一个输入范围未找到他，则返回end1.
+(2)其他只读算法
+这些算法要求把两个实参都是输入迭代器。
+equal和mismatch算法还接受一个额外的输入迭代器，表示第二个范围的开始位置。这两个算法都提供两个重载的版本。第一个版本使用底层类型的相等运算符==比较元素，第二个版本则用用户指定的unaryPred或binaryPred
+for_each(beg1, end1, beg2)
+对输入序列的每个元素应用可调用对象unaryOp.unaryOp的返回值被忽略。如果迭代器允许通过解引用运算符向序列中的元素写入值，则unaryOp可能修改元素。
+mismatch(beg1, end1, beg2)
+mismatch(beg1, end1, beg2, binaryPred)
+比较两个序列中的元素，返回一个迭代器的pair，表示两个序列中第一个不匹配的元素。如果所有元素都匹配，则返回的pair第一个迭代器为end1，第二个迭代器指向beg2中偏移量等于第一个序列长度的位置。
+equal(beg1, end1, beg2)
+equal(beg1, end1, beg2, binaryPred)
+确定两个序列是否相等。如果输入序列中每个元素都与从beg2开始的序列中对应元素相等，则返回true。
+二分搜素算法
+这些算法都要求前向迭代器，但这些算法都经过了优化，如果我们提供随机访问迭代器的话，他们的性能会好很多，
+从技术上讲，无论我们提供什么类型的迭代器，这些书废都会执行对数次的比较操作，但是当使用前向迭代器时，这些算法必须花费线性次数的迭代器操作来移动到序列中要比较的元素
+这些算法要求序列中的元素已经是有序的，他们的行为类似关联容器的同名成员。equal_range,lower_bound和upper_bound算法返回迭代器，指向给定元素在序列中的正确插入位置——插入后还能保持有序。如果给定元素比序列中的所有元素都大，则会返回尾后迭代器。
+每个算法提供两个版本：第一个版本用元素类型的小于运算符<检测元素；第二个版本使用给定的比较操作。
+lower_bound(beg, end, val)
+lower_bound(beg, end, val, comp)
+返回一个迭代器，表示第一个小于等于val的元素，如果不存在这样的元素则返回end
+upper_bound(beg, end, val)
+upper_bound(beg, end, val, comp)
+返回一个迭代器，表示第一个大鱼val的元素，如果不存在这样的元素则返回end
+equal_range(beg, end, val)
+equal_range(beg, end, val, comp)
+返回一个pair，其first成员是lower_bound返回的迭代器，second成员是upper_bound返回的迭代器
+binary_search(beg, end, val)
+binary_search(beg, end, val, comp)
+返回一个bool值，指出序列中是否包含等于val的元素。对于两个值xy，当x不小于y且y不小于x时，认为他们相等。
+(4)写容器元素的算法
+很多算法向给定序列中的元素写入新值。这些算法可以从不同角度加以区分：通过表示输入序列的迭代器类型来区分：或者通过是写入输入序列中元素还是写入给定目的位置来区分。
+1.只写不读的算法
+这些算法要求一个输出迭代器，表示目的位置，_n结尾的版本接受第二个实参，表示写入的元素数目，并将给定数目的元素写入到目的位置中。
+fill(beg, end, val)
+fill_n(dest, cnt, val)
+generate(beg, end, Gen)
+generate_n(dest, cnt, Gen)
+给输入序列的每个元素赋予一个新值。fille将val赋予元素；generate执行生成器给对象Gen()生成新值。生成器是一个可调用对象，每次调用会生成一个不同的返回值。
+fill和generate都返回void。_n版本返回一个迭代器，指向写入到输出序列的最后一个元素之后的位置。
+2.使用输入迭代器的写算法
+这些算法读取一个输入序列，将值写入到一个输出序列中。他们要求一个名为dest的输出迭代器，而表示输入范围的迭代器必须是输入迭代器。
+copy(beg, end, dest)
+copy_if(beg, end, dest, unaryPred)
+copu_n(beg, n, dest)
+从输入范围内将元素拷贝到dest指定的目的序列。copy拷贝所有元素，copu_if拷贝那些满足unaryPred的元素，copy_n拷贝前n个元素。输入系列至少n个元素。
+move(beg, end, dest)
+对输入序列中 的每个元素调用std::move，将其移动到迭代器dest开始的序列中。
+transform(beg, end, dest, unaryOp)
+transform(beg, end, dest, dest, unaryOp)
+调用给定操作，并将结果写到dest中。第一个版本对输入范围中每个元素应用一元操作。第二个版本对两个输入序列中的元素应用二元操作。
+replace_copy(beg, end, dest, old_val, new_val)
+replace_copy_if(beg, end, dest, unaryPred, new_val)
+将每个元素拷贝到dest，将制定的元素替换为new_val。第一个版本替换old_val,第二个版本替换满足unaryPred的元素
+merge(beg1, end1, beg2, end2, dest)
+merge(beg1, end1, beg2, end2, dest， comp)
+两个输入序列必须都是有序的。将合并后的序列写入到dest中。第一个版本用<运算符比较元素。第二个版本使用给定比较操作
+3.使用前向迭代器的写算法
+这些算法要求前向迭代器，由于他们是向输入序列写入元素，迭代器必须具有写入元素的权限。
+iter_swap(iter1,iter2)
+swap_range(beg1, end1, beg2)	
+交换iter1和iter2所表示的元素，或将输入范围中的所有元素与beg2开始的第二个序列中祝所有元素进行交换。两个范围不能有重叠。
+iter_swap返回void，swap_ranges返回递增后的beg2，指向最后一个交换元素之后的位置。
+replace(beg, end, old_val, new_vcal)
+replace_if(beg, end, unaryPred, new_vcal)
+用new_val替换每个匹配 元素。第一个版本使用==比较元素与old_val，第二个版本替换那些满足unaryPred的元素。
+4.使用双向迭代器的写算法
+这些算法需要在序列中有反向移动的能力，因此他们要求双向迭代器。
+copy_backward(beg, end, dest)
+move_backward(beg, end, dest)
+从输入范围拷贝或移动元素到指定目的位置。与其他算法不同，dest是输出序列的尾后迭代器（即目标序列做dest之前结束）。输入范围中微元素被拷贝或移动到目的序列的微元素，然后依次向前。
+元素做目的序列中的顺序与做输入序列中相同。如果范围为空，则返回值为dest；否则返回值表示从*beg中拷贝或移动的元素。
+inplace_merge(beg, mid, end)
+inplace_merge(beg, mid, end, comp)
+将同一序列中的两个有序子序列合并为单一的有序序列。beg到mid间的子序列和mid到end间的子序列别合并，并写入到原序列中。
+第一个版本使用<比较元素，第二个版本使用给定的比较元素，返回void
+(5)划分和排序算法
+对于序列中的元素进行排序，排序和划分算法提供了多种策略。
+每个排序和划分算法都提供了稳定和不稳定版本。稳定算法保证保持相等元素的相对排序。由于稳定算法做更多工作，可能比不稳定版本消耗更多的内存。
+1.划分算法
+一个划分算法将输入范围内的元素划分为两组。第一组包含那些满足给定谓词的元素，第二组则包含不满足谓词的元素。这些算法都要求双向迭代器
+is_partitioned(beg, end, unaryPred)
+如果所有满足谓词unaryPred的元素都在不满足unaryPred的元素之前，则返回true。若序列为空，也返回true。
+partition_copy(beg, end, dest1, dest2, unaryPred)
+将满足unaryPred的元素拷贝到dest1，并将不满足unaryPred的元素拷贝到dest2.
+返回一个迭代器pair，first成员表示拷贝到dest1的元素末尾，second表示拷贝到dest2元素的末尾。输入序列和两个目的序列必须都不能重叠。
+partition_point(beg, end, unaryPred)
+输入序列必须是已经用unaryPred划分过的。返回满足unaryPred的范围的尾后迭代器。
+如果返回的迭代器不是end，则他指向的元素及其后的元素必须都不满足unaryPred
+stable_partition(beg, end, unaryPred)
+partition(beg, end, unaryPred)
+使用unaryPred划分输入序列。满足unaryPred的元素放置做序列开始，不满足的元素放在序列尾部。返回一个迭代器，指向最后一个满足unaryPred的元素之后的位置，如果所有都不满足，则返回beg。
+2.排序算法
+这些算法要求随机访问迭代器。每个排序算法都提供两个重载的版本。一个版本用元素的<运算符来比较元素，另一个版本接受一个额外参数来制定排序关系。
+partial_sort_copu返回一个指向目的位置的迭代器，其他排序算法都要返回void。
+partial_sory和nth_element算法都只进行部分排序，他们常用语不需要排序整个序列的场合。由于工作量小，所以排序更快
+sort(beg, end)
+stable_sort(beg, end)
+sort(beg, end, comp)
+stable_sort(beg, end, comp)
+排序整个范围
+is_sorted(beg, end)
+is_sorted(beg, end, comp)
+is_sorted_until(beg, end)
+is_sorted_until(beg, end, comp)
+is_sorted返回一个boool，指整个输入序列是否有序，is_sorted_until做输入序列中查找最长初始有序子序列，并返回子序列的尾后迭代器。
+partial_sort(beg, mid, end)
+partial_sort(beg, mid, end, comp)
+排序mid-beg个元素，如果mid-beg等于42，则此函数将值最小的42个元素有序排列在前42个位置。当partial_sort完成后，从beg开始至mid之前的范围中的元素都已经排好序了。
+已排序范围中的元素都不会比mid后的元素更大。未排序区域中元素的顺序是未指定的。
+patrial_sort_copy(beg, end, destBeg, destEnd)
+patrial_sort_copy(beg, end, destBeg, destEnd, comp)
+排序输入范围中 的元素，并将足够多的已排序元素放到destBeg和destEnd所指示的序列中。
+算法返回一个迭代器，指向目的范围中已排序部分的尾后迭代器。如果目的序列大小小等于输入范围，返回destEnd。
+nth_element(beg, neth, end)
+nth_element(beg, neth, end, comp)
+参数nth必须是一个迭代器，指向输入序列中的一个元素。执行nth_element后，此迭代器指向的元素恰好是整个序列排好序后此位置上的值。
+序列中的元素会围绕nth进行划分：nth之前的元素小于等于他，之后的元素大于等于他。
+(6)通用重排操作
+这些算法重拍输入序列中元素的顺序。前两个算法remove和unique，会重拍序列，使得排在序列第一部分的元素满足某种标准。他们返回一个迭代器，标记子序列的末尾。
+其他算法，如reverse、rotate和randon_shuffle都重排整个序列。
+这些算法的基本版本都进行原址操作，即做输入序列自身内部重排元素。三个重排算法提供拷贝版本。这些copy版本完成相同的重排工作，但将重排后 的元素写入到一个指定目的序列中个，而不是改变输入序列。这些算法要求输出迭代器来表示目的序列。
+1.使用前向迭代器的排序算法
+这些算法重排输入序列，他们要求迭代器至少是前向迭代器。
+remove(beg, end, val)
+remove_if(beg, end, unaryPred)
+remove_copy(beg, end, dest, val)
+remove_copy_if(beg, end, dest, unaryPred)
+从序列中删除元素，采用办法是用保留的元素覆盖要删除的元素。被删除的是哪些==val或者满足unaryPred的元素。算法返回一个迭代器，指向最后一个删除元素的尾后位置。
+unique(beg, end)
+unique(beg, end, binaryPred)
+unique_copy(beg, end, dest)
+unique_copy_if(beg, end, dest, binaryPred)
+重排序列，对相邻的重复元素，通过覆盖他们来进行删除。返回一个迭代器，指向不重复元素的尾后位置。第一个版本用==确定是否相同，第二个用谓词检测相邻元素。
+rotate(beg, mid, end)
+rotate_copy(beg, mid, end, dest)
+围绕mid指向的元素进行元素转动
+2.使用双向迭代器的重排算法
+这些算法要反向处理输入序列，他们要求双向迭代器。
+reverse(beg, end)
+reverse_copu(beg, end, dest)
+翻转序列中个的元素 reverse返回void，reverse_copy返回一个迭代器，指向拷贝到目的序列的元素的尾后位置。
+3.使用随机访问迭代器的重排算法
+由于这些算法要重新重排元素，他们要求随机访问迭代器。
+random_shuffle(beg, end)
+random_shuffle(beg, end, rand)
+shuffle(beg, end, Uniform_rand)
+魂洗输入序列中的元素。第二个版本接受一个可调用对象参数，该对象必须接受一个正常数值，并生成0到此值的包含区间内的一个服从均匀分布的随机整数。
+shuffle的第三个参数必须满足均匀分布随机数成生气的要求。所有版本都返回void。
+(7)排列算法
+排列算法生成序列的字典序排列。对于一个给定序列，这些算法通过重排他的一个排列来生成字典序中下一个或前一个排列。算法返回一个bool值，指出是否还有下一个或前一个排序。
+为了生成排列，必须即向前又向后处理序列，因此算法要求双向迭代器。
+is_permutation(beg1, end1, beg2)
+is_permutation(beg1, end1, beg2, binaryPred)
+如果第二个序列的某个排列和第一个序列具有相同数目的元素，且元素都相等，则返回true，第一个版本用==比较元素，第二个版本使用给定的binaryPred。
+next_permutation(beg, end)
+next_permutation(beg, end, comp)
+如果序列已经是最后一个排列，则next_permutation将序列重拍为最小的排列，并返回false。
+prev_permutation(beg, end)
+prev_permutation(beg, end, comp)
+类似于next_permutation
+(8)有序序列的集合算法
+集合算法实现了有序序列上的一般集合操作。
+includes(beg, end, beg2, end2)
+includes(beg, end, beg2, end2, comp)
+如果第二个序列中每个元素都包含在输入序列中，则返回true，否则返回false。
+set_union(beg, end, beg2, end3, dest) 
+set_union(beg, end, beg2, end3, dest, comp)
+对两个序列中的所有元素，创建他们的有序序列。两个序列都包含的元素在输出序列中只出现一次。输出序列保存在dest中。
+set_intersection(beg, end, beg2, end2, dest)
+set_intersection(beg, end, beg2, end2, dest, comp)
+对两个序列都包含的元素创建一个有序序列。结果序列保存在dest中。
+set_difference(beg, end, beg2, end2, dest)
+set_difference(beg, end, beg2, end2, dest, comp)
+对出现做第一个序列中，但不在第二个序列中的元素，创建一个有序序列
+set_symmetric_difference(beg, end, beg2, end2, dest)
+set_symmetric_difference(beg, end, beg2, end2, dest, comp)
+对出现做一个序列中个的元素，创建一个有序序列。
+(9)最小值和最大值
+这些算法使用元素类型的<运算符或给定的比较操作。第一组算法对值而非序列进行操作。
+min(val1, val2)
+min(val1, val2, comp)
+min(init_list)
+min(init_list, comp)
+max(val1, val2)
+max(val1, val2, comp)
+max(init_list)
+max(init_list, comp)
+返回val1和val2中的最小值和最大值，或initializer_list中的最小值/最大值，两个实参类型必须完全一致。参数和返回类型都是const的因哟呵你个，意味着对象不会被拷贝。
+minmax(val1,val2)
+minmax(val1, val2, comp)
+minmax(init_list)
+minmax(init_list, comp)
+返回一个pair，first为较小，second为最大。
+min_element(beg, end)
+min_element(beg, end, comp)
+max_element(beg, end)
+max_element(beg, end, comp)
+minmax_element(beg, end)
+minmax_element(beg, end, comp)
+min_elemengt和max_element分布返回指向输入序列中最小和最大元素的迭代器。minmax_element返回一个pair
+1.字典序比较
+lexicographical_compare(beg1, end1, beg2, end2)
+lexicographical_compare(beg1, end1, beg2, end2, comp)
+如果第一个序列在字典序小于第二个序列，则返回true。否则返回false。如果一个序列比另一个短，且所有元素都与较长序列的对应元素相等，则较短序列在字典序中更小。
+如果序列长度相等，且对应元素都相等，则做字典序中任何一个都不大于另外一个。
+(10)数值算法
+定义做numeric。这些算法要求输入迭代器，如果算法输出数据，则使用输出迭代器表示目的位置。
+accumulat(beg, end init)
+accumulat(beg, end init, binaryOp)
+返回输入序列中所有值的和。和的初值从init制定的值开始。返回类型与init的类型相同。第一个版本使用元素类型的+运算符，第二个版本使用制定的二元操作。
+inner_product(beg1, end1, beg2, init)
+inner_product(beg1, end1, beg2, init, binOp1, binOp2)
+返回两个序列的内积。两个序列一起处理，来自两个序列的元素相乘，乘积被积累起来。和的初值有init制定，init的类型确定了返回类型。
+partial_sun(beg, end, dest)
+partial_sun(beg, end, dest， bianaryOp)
+将新序列写入dest，每个新元素的值都等于输入范围中当前位置和之前位置上所有元素的和。
+adjacent_difference(beg, end, dest)
+adjacent_difference(beg, end, dest, binaryOp)
+将新序列写入dest，每个新元素的值等于输入范围中当前位置和前一个位置元素之差。
+iota(beg, end, val)
+将val赋予首元素并递增val。将递增后的值赋予下一个元素，继续递增val，然后将递增后的值赋予序列中的下一个元素。继续递增val并将新值赋予输入序列中的后续元素。
