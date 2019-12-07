@@ -24,6 +24,6 @@
  18                        [21-1](https://github.com/952362235/bblog/blob/master/2019/11/21-1)
                           [算法概述](https://github.com/952362235/bblog/blob/master/2019/11/stl%E7%AE%97%E6%B3%95%E6%A6%82%E8%BF%B0)
                  [深度学习入门](https://github.com/952362235/bblog/blob/master/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%85%A5%E9%97%A8)
-                          
-                          [os](https://github.com/952362235/bblog/blob/master/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F)
+                           [os](https://github.com/952362235/bblog/blob/master/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F)
+                         
                           plan: 每日英语听力 英语单词 代码 跑步
