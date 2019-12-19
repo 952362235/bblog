@@ -1,0 +1,151 @@
+通用工具
+5.1 Pair和Tuple
+Pair 1.元素访问  直接访问对应数据成员的能力  他是给struct而不是class 比如
+templat <typename T1, typename T2>
+std::ostream & operator << (std::ostream & strm, const std::pair<T1, T2> & p)
+{
+	return strm << "[" << p.first << "," << p.second << "]";
+}
+cpp11，可以对pair使用tuple - like接口，用tuple_size<>::value获得个数 tuple_element<>::type获得元素类型 get()获得first或者second
+2.构造函数和赋值
+默认构造函数 std::pair<int, float> p;   以int()和float()来初始化p。
+拷贝构造函数存在两个版本 1，接受相同类型的pair，2是个成员模板， 在构造过程中需要隐式转化时被调用。、
+3.逐块式构造 
+4.便捷函数make_pair()
+5.pair之间的比较  第一个元素具有较高的优先级
+6.pair运用实例  map  multimap   cpp标准中凡必须返回两个value的函数都使用pair对象
+Tuple(不定数的值组)
+1.Tuple的操作 1.通过明白的声明，或使用便捷函数make_tuple(),创建一个tuple
+2.通过get<>()function templat，访问tuple元素。
+2.便捷函数make_tuple()和tie()
+3.tuple和初值列
+4.其他tuple特性  tuple_size<tupletype>::value获取元素个数
+tuple_element<idx,tupletype>::type 可获取第idx个元素的类型（也就是get()返回值的类型）
+tuple_cat()可以将多个tuple串接成一个tuple
+Tuple的输入/输出
+tuple和pair转换 
+5.2 Smart Pointer 智能指针
+class shared_ptr 
+1.使用shared_ptr   make_shared()    先声明shared pointer,然后赋值一个new pointer。不能用=操作符 改用reset().
+2.定义一个Deleter
+3.对付Array
+std::shared_ptr<int> p(new int[10],
+	[](int* p) {
+		delete[] p;
+	})
+4.其他析构策略  最后一个指针结束时，如果清理工作不仅仅是删除内存，必须明确给出自己的deleter。你可以指定属于自己的析构策略
+Class weak_ptr  共享但不拥有   不能使用*或者->访问weak_ptr指向的对象，而是必须另外建立一个shared_ptr
+1.使用class weak_ptr
+误用shared pointer    class std::enable_shared_from_this<>
+class unique_ptr
+两指互换 swap()并非直接交换数值，会带来大量的性能提升。
+增补的比较操作符定义于std::rel_ops
+class ratio<>的编译器分数运算
+for_each算法
+transform()
+判断式 单参判断式unary predicate  双参判断式
+使用Lambda   在表达式或者语句内指明函数行为的定义式子   [=] capture  by value  [&] by regerence
+以lambda作为排序准则 
+函数对象  传递给算法函数型实参的不一定是函数，可以是行为类似函数的对象。这种对象称为函数对象，或者仿函数。
+c++11起，c++standard使用术语function object表示任何可被当作函数而被调用的object。因此，1，function pointer 2，带有成员函数operator（）
+的class所建立的对象 3，带有转换函数可将自己转换为pointer to function 的class建立的对象 已经4，lambda 全都是function object
+只要行为像函数，就是个函数。 函数行为指可以使用小括号传递实参，借以调用某个东西。
+函数对象优点：1函数对象是一种带状态的函数   2每个函数对象有自己的类型 3 函数对象通常比函数速度快。
+binder 
+容器的共通操作
+1.初始化 每个容器类都提供了一个默认构造函数 一个拷贝构造函数 一个析构函数。
+2.赋值和swap   复制动作代价高昂  c++11  使用move assignment 
+3.与大小相关的操作函数  1.empty()  2.size()  3. max_size()
+4.比较 
+array 指一系列元素有着固定大小 无法改变大小只能替换元素值   有序集合 随机访问迭代器 可以运用任何stl算法
+如果你需要一个有固定元素量的序列，class array<>将带来最佳效能，因为内存被分配于stack，绝不会被重分配，而且你拥有随机访问能力。
+1.初始化  2swap和mve  3.size
+array操作
+vector 有序集合 随机访问器 插入删除中间元素效率低下
+大小size和容量capacity
+vector和deque的接口几乎一样。deque两端快速加入移除元素。
+1.value_type 2.pair<> 3.make_pair()
+各种容器的使用时机
+默认情况下应该使用vector。vector的内部结构最简单，并允许随机访问，所以数据的访问十分的方便灵活，数据的处理也够快。
+如果经常做序列头部和尾部安插和移除元素，应该选用deque、如果你希望元素被移时候，容器能够自动缩减内部内存的用了，也应该采用deque。此外由于vector通常采用一个内存区块来存放元素，deque采用多个区块，所以后者可以内含更多的元素。
+如果需要经常做容器中段执行元素的安插移除和移动，可以考虑使用list。list提供特殊的成员函数，可以做常量时间内将元素从A容器转移到B容器。但由于list不支持随机访问，所以如果只知道list的头部却反问list中段元素，性能大打折扣。
+改变元素后，list的迭代器不会失效，vector deque会失效
+经常需要根据准则查找元素，应当使用依据该准则进行hash的unordered set或multiset，hast的容器内是无需的，如果你必须依赖元素次序，应该使用set或multiser，他们根据查找准则对元素排序。
+如果想处 理key/value pair或者需要关联式数组,应采用unordered map，如果次序很重要选择map
+如果需要字典结构，应采用unordered multimap。如果次序很重要采用multimap。
+C++标准库为迭代器提供了一些辅助函数 advancd()  next()   prev()  distance()和iter_swap() 前四者提供给所有迭代器一些只有random access迭代器才有的能力。最后一个允许交换value
+算法 引入了两个特殊后缀：
+1.后缀_if  无后缀要求传入数值 有后缀要求传入函数或function object
+2.后缀_copy 表示算法中的元素不只被操作 还copy到目标区间
+std::string s('x')   error       存在一个从cosnst char*到string的自动类型转换，但不存在一个从char到string的自动类型转换。
+有三个函数可以将string内存转换为字符数组或C-string：1 data() c_str() 2.copy()
+正则表达式程序库regex，他允许你使用通配符和patterrn模式来查找和替换string中的字符。
+C++11 支持并发编程
+1高级接口 async（）和future（）
+async提供一个接口，让一段机能或说一个callable object若是可能的话做后台运行，成为一个独立线程。
+class future<>允许你等待线程结束并获取其结果
+#include <future>
+#include <thread>
+#include <chrono>
+#include <random>
+#include <iostream>
+#include <exception>
+	using namespace std
+		int doSomething(char c)
+	{
+		std::default_random_engine dre(c);
+		std::uniform_int_distribution<int> id(10, 1000);
+		for (int i = 0; i < 10; ++i) {
+			this_thread::sleep_for(chrono::miliseconds(id(dre)));
+			cout.put(c).flush();
+		}
+		return c;
+	}
+	int func1()
+	{
+		return doSomething('.');
+	}
+	int func2()
+	{
+		return doSomethin('+');
+	}
+	int main()
+	{
+		std::cout << "starting func1() in background" << " and func2() in foreground:" << std::endl;
+		std::future<int> result1(std::async(func1));
+		int result2 = func2();
+		int result + result1.get() + result2;
+		std::cout << "\nreuslt of func1() + func2()" << result << std::enl;
+	}
+	低层接口Thread和Promis
+	欲启动某个线程，只需先声明一个 calss std::thread对象，并将目标任务当作初始实参，然后要么就等待他结束，要么就将他卸离
+	经验法则：终止detached thread 的唯一安全方法就是搭配at_thread_exit()
+线程同步化与Concurrency并发问题
+使用多线程几乎总是会伴随数据的并发访问，线程有可能提供数据给其他线程处理，或者备妥必要的先决条件以启动其他进程。
+1.当心并发
+多个线程并发处理相同的数据而又不曾同步化，那么唯一安全的情况就是：所有线程只读取数据。
+data race是不同线程中的两个互相冲突的动作，其中至少一个动作不是atomic（不可切割的），而且无以动作发生做另一动作之前。data race总是导致不可预期的行为。
+Unsynchronized Data Access未同步化的数据访问
+除非另有说明，C++标准库提供的函数通常不支持写或读动作与另一个写动作并发执行。
+Half-Written Data写至半途的数据
+Reordered Statement重新安排的语句
+C++标准库采用许多方法来处理概念，让程序做concurrent access方面获得额外的保证：
+你可以使用future和promise，他们都保证atomicity和order：一定是在形成成果之后才设定shared stat,这意味着读和写不会并发发生。
+你可以使用mutex和lock来处理critical section或protected zone，。lock提供atomicity，他阻塞所有使用second lock的处理行为，直到first lock被释放。
+可以使用condition variable有效的令某线程等待若干被另一个线程控制的判断式成为true。这有助于次序。
+可以使用atomic data type确保每次对变量或对象的访问动作都是不可切割的，只要操作次序保持稳定。
+可以使用atomic data type的底层接口，他允许专家放宽atomic语句的次序或针对内存访问mamual barrier，所谓fence。
+Mutex全名 mutual exclusion互斥体，用来协助采取独占排他的方式控制对资源的并发访问
+轮询等待不是一个好的解决方法，好的办法是借用22condition variable条件变量是个变量，一个线程可以唤醒一或多个其他等待中的线程。
+template <typename T, typename F = less<T>>
+int compare(const T & v1, const T & v2, F f = F())
+	{
+		if (f(v1, v2)) return -1;
+		if (f(v2, v1)) return 1;
+	}
+一个类可以包含本身是模板的成员函数，这种函数被称为成员模板，成员模板不能是虚函数。
+对于函数模板，编译器利用调用中的函数实参来确定其模板参数。从函数实参来确定模板实参的过程称为模板实参推断。
+将实参传递给带模板类型的函数形参时，能够自动 应用的类型转换只有const转换及数组或函数到指针的转换。
+如果一个函数参数是指向模板参数类型的右值引用(T&&).则可以传递给它任意类型的实参。如果将一个左值传递给这样的参数，则函数参数被实例化为一个普通的左值引用(T&).
+可变参数模板就是一个接受可变数目参数的模板函数或者模板类。可变数目的参数被称为参数包。函数参数包  模板参数包
+特例化本质是实例化一个模板，而非重载太。因此，特例化不影响函数匹配。
