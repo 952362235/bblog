@@ -28,5 +28,5 @@
                          [笔记](https://github.com/952362235/bblog/blob/master/2019/12/19)
                          
                          
-                                [机组：数据的表示和运算](https://github.com/952362235/bblog/blob/master/%E6%95%B0%E6%8D%AE%E7%9A%84%E8%A1%A8%E7%A4%BA%E5%92%8C%E8%BF%90%E7%AE%97)
-                          plan: 每日英语听力 英语单词 代码 跑步
+                             [机组：数据的表示和运算](https://github.com/952362235/bblog/blob/master/%E6%95%B0%E6%8D%AE%E7%9A%84%E8%A1%A8%E7%A4%BA%E5%92%8C%E8%BF%90%E7%AE%97)
+                                plan: 每日英语听力 英语单词 代码 跑步
