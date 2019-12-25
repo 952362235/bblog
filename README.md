@@ -29,7 +29,7 @@
                             [机组：存储器](https://github.com/952362235/bblog/blob/master/%E5%AD%98%E5%82%A8%E5%99%A8)
                                        [机组：处理器](https://github.com/952362235/bblog/blob/master/%E5%A4%84%E7%90%86%E5%99%A8)
                                         [机组：总线和I/O](https://github.com/952362235/bblog/blob/master/%E6%80%BB%E7%BA%BF%20I/O)
-   [os：进程管理]（https://github.com/952362235/bblog/blob/master/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86）
+   [os：进程管理](https://github.com/952362235/bblog/blob/master/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86)
                                         
                                         
                                         
