@@ -31,7 +31,7 @@
                                         [机组：总线和I/O](https://github.com/952362235/bblog/blob/master/%E6%80%BB%E7%BA%BF%20I/O)
    [os：进程管理](https://github.com/952362235/bblog/blob/master/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86)
    [os：内存管理](https://github.com/952362235/bblog/blob/master/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86)
-                                        
+   [公约数公倍数求法](https://github.com/952362235/bblog/blob/master/%E5%85%AC%E7%BA%A6%E6%95%B0%20%E5%85%AC%E5%80%8D%E6%95%B0)
                                         
                                         
                                                 
