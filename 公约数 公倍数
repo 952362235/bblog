@@ -1,0 +1,122 @@
+求最小公倍数的三种方法
+1.常规法
+
+#include<stdio.h>
+#include<stdlib.h>
+int main(){
+    int a, b, i,j;
+    printf("请输入两个数\n");
+    scanf("%d%d", &a, &b);
+    for (i = 2;i<=a;i++){
+        if (a%i == 0 && b%i == 0)
+        {
+            j = i;
+        }
+    }
+    printf("最大公约数为：%d", j);
+    system("pause");
+return 0;
+}
+2.辗转相除法
+
+#include<stdio.h>
+#include<stdlib.h>
+int main() {
+    int a, b, c;
+    printf("请输入两个数\n");
+    scanf("%d%d", &a, &b);
+    while (b!=0) {    //不用比较被除数和除数的大小
+        c = a % b;
+        a = b;
+        b = c;
+    }
+    printf("最大公约数为：%d", a);
+    system("pause");
+    return 0;
+}
+3.更相减损法
+
+#include<stdio.h>
+int main() {
+    int i = 0, j = 0, k = 0, a = 0, b = 0;
+    scanf("%d%d", &i, &j);
+    for (a = i,b = j;(a % 2 == 0) & (b % 2 == 0);) {
+        a = a / 2;
+        b = b / 2;
+    }
+    for (k=0;a!=b;) {
+        while (a > b) {
+            k = a - b;
+            a = b;
+            b = k;
+        }
+        if (a == b)
+            break;
+        k = b - a;
+        a = a;
+        b = k;
+        }
+    printf("%d与%d最大公约数为：%d\n",i,j,k);
+    system("pause");
+    return 0;
+}
+
+
+
+最小公倍数=两数乘积*最小公约数
+
+求最小公约数可以使用欧得几里算法（也就是传说中的辗转相除法）
+
+int gcd(int a,int b)
+{
+    if(b==0)
+        return a;
+    return 
+        gcd(b,a%b);
+}
+ 也可以使用(这两个方法的原理都是一样的)
+
+ int gcd(int x,int y)
+ {
+   while(x!=y)
+   {
+ 
+       if(x>y) x=x-y;
+        else
+        y=y-x;
+   }
+   return x;
+   //辗转相除法
+ }
+ 有时候两数乘积会超过整数的范围,由此我们可以调整一下顺序:a/gcd(a,b)*b
+
+先除一下，这样就可以避免在一定程度上避免溢出
+
+#include<iostream>
+#include<vector>
+#include<set>
+#include<cmath>
+using namespace std;
+int gcd(int,int);
+ int main(int argc,char *argv[])
+ {
+     int x,y;
+    while(cin>>x>>y)
+    {
+      cout<<x/gcd(x,y)*y<<endl;
+    }
+    return 0;
+ }
+ int gcd(int x,int y)
+ {
+   while(x!=y)
+   {
+ 
+       if(x>y) x=x-y;
+        else
+        y=y-x;
+   }
+   return x;
+   //辗转相除法
+ }
+ 
